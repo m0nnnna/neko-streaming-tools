@@ -8,7 +8,7 @@ Accepts a local OBS RTMP stream, buffers it with a configurable delay, and multi
 
 - `src/NekoStreamer.App` — WPF control panel (destinations grid, delay, start/stop)
 - `src/NekoStreamer.Core` — ingest (MediaMTX), delay buffer, multistream pusher (ffmpeg), Win32 Job Object crash-safety
-- `tools/mediamtx/` — vendored MediaMTX binary (gitignored — see **Setup** below)
+- `tools/mediamtx/` — vendored MediaMTX binary, committed directly (see **Setup** below for why)
 
 ## NekoChat
 
@@ -28,8 +28,33 @@ Both apps target **.NET 9, Windows only** (WPF). Build with `dotnet build` from 
 
 Secrets (OAuth tokens, donation platform tokens) are encrypted at rest via Windows DPAPI, scoped to the current Windows user account — never stored in plaintext.
 
-**NekoStreamer only**: `tools/mediamtx/mediamtx.exe` is vendored but gitignored (it's a ~53MB third-party binary). Download the latest Windows build from [MediaMTX releases](https://github.com/bluenviron/mediamtx/releases) and place `mediamtx.exe` at `NekoStreamer/tools/mediamtx/mediamtx.exe` before building — or use the binaries already bundled in a [tagged release](../../releases) of this repo.
+**NekoStreamer only**: `tools/mediamtx/mediamtx.exe` (~53MB) is committed directly rather than gitignored — excluding it made a fresh clone fail to build, since the app's `.csproj` copies it as a Content item and MSBuild hard-errors when that file is missing. If you ever need to update it, grab the latest Windows build from [MediaMTX releases](https://github.com/bluenviron/mediamtx/releases) and replace `NekoStreamer/tools/mediamtx/mediamtx.exe`.
 
 ## Releases
 
 Tagged releases include prebuilt, ready-to-run binaries for both apps (no .NET SDK required, just Windows + the .NET 9 desktop runtime).
+
+## Registering Your Own Apps (Twitch / YouTube)
+
+NekoChat's Twitch and YouTube integrations use OAuth, which means **each person running NekoChat needs their own app registration** with Twitch/Google — the Client ID (and for YouTube, Client Secret) aren't something that can be baked into the app or shared between users. This only takes a few minutes and both are free.
+
+Kick needs no registration at all — just your channel name. StreamElements/Liberapay/Bitcoin/Ethereum donation sources are explained inline in the app's Donations tab.
+
+### Twitch
+
+1. Go to the [Twitch Developer Console](https://dev.twitch.tv/console) and log in (you'll need 2FA enabled on your Twitch account).
+2. **Applications** tab → **Register Your Application**.
+3. Pick any name, and a **Category** (e.g. "Application Integration" / "Chat Bot").
+4. For **OAuth Redirect URLs**: NekoChat uses Twitch's [Device Code Grant flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-code-grant-flow), which never actually redirects anywhere — but Twitch's registration form requires *some* non-empty value here regardless. `http://localhost` is the commonly-used placeholder for this exact situation (this isn't documented by Twitch, just the standard community workaround for apps that only use Device Code Grant).
+5. Create the app, open it, and copy the **Client ID** — that's the only thing NekoChat needs. No client secret required.
+6. Paste the Client ID into NekoChat's Twitch tab and hit Connect — it'll show you a code and a link to twitch.tv/activate to approve it.
+
+### YouTube
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project (or reuse one).
+2. **APIs & Services → Library** — search for and enable the **YouTube Data API v3**.
+3. **APIs & Services → OAuth consent screen** — set it up as **External**, fill in the required fields. It'll stay in **Testing** status, which is fine.
+4. Still on the consent screen, add **your own Google account** under **Test users** — without this step, sign-in will fail with an "Access blocked: has not completed the Google verification process" error, even though it's your own app.
+5. **APIs & Services → Credentials → Create Credentials → OAuth client ID**, application type **Desktop app**.
+6. Copy the **Client ID** and **Client Secret** into NekoChat's YouTube tab and hit Connect — it opens your browser for Google sign-in.
+7. You need to actually be live-streaming on YouTube for chat messages to start appearing (YouTube only exposes a live chat ID for an active broadcast).
