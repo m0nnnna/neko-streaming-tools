@@ -1,0 +1,5 @@
+# Root-level ignores — NekoStreamer/ and NekoChat/ each carry their own
+# more complete .gitignore for build output, IDE files, etc.
+.vs/
+*.user
+.claude/

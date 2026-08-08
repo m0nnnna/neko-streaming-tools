@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Source lives on a network-mapped drive, but Windows/SMB refuses to execute
+    binaries built there (confirmed for mediamtx.exe, ffmpeg output, and even our
+    own testhost.exe). Redirect obj/bin locally so build output is always runnable.
+  -->
+  <PropertyGroup>
+    <NekoStreamerLocalBuildRoot>$(LOCALAPPDATA)\NekoStreamer\build</NekoStreamerLocalBuildRoot>
+    <BaseIntermediateOutputPath>$(NekoStreamerLocalBuildRoot)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(NekoStreamerLocalBuildRoot)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

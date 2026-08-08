@@ -1,0 +1,23 @@
+# NekoStreamer ingest config.
+# RTMP-only, everything else disabled to keep footprint minimal.
+# OBS setup: Server = rtmp://localhost:1935, Stream Key = live
+
+logLevel: info
+logDestinations: [stdout]
+
+api: yes
+apiAddress: 127.0.0.1:9997
+
+rtmp: yes
+rtmpAddress: :1935
+rtmpEncryption: "no"
+
+rtsp: no
+hls: no
+webrtc: no
+srt: no
+moq: no
+
+paths:
+  live:
+    source: publisher

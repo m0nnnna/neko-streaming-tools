@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    Source lives on a network-mapped drive, but Windows/SMB refuses to execute
+    binaries built there (same issue hit in NekoStreamer). Redirect obj/bin
+    locally so build output is always runnable.
+  -->
+  <PropertyGroup>
+    <NekoChatLocalBuildRoot>$(LOCALAPPDATA)\NekoChat\build</NekoChatLocalBuildRoot>
+    <BaseIntermediateOutputPath>$(NekoChatLocalBuildRoot)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(NekoChatLocalBuildRoot)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>
