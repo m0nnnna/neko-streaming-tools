@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NekoStreamer.Core\NekoStreamer.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    Build output is redirected off the network drive (see Directory.Build.props), so
+    it no longer shares a directory tree with tools/ and config/ at the repo root.
+    Copy them into the output directory so VendoredTools can find them next to the
+    running exe regardless of where that output directory actually is.
+  -->
+  <ItemGroup>
+    <Content Include="..\..\tools\mediamtx\mediamtx.exe" Link="tools\mediamtx\mediamtx.exe" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\config\mediamtx.yml" Link="config\mediamtx.yml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+</Project>

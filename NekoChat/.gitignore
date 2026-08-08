@@ -424,7 +424,9 @@ test-results/
 
 # Mac bundle stuff
 *.dmg
-*.app
+# *.app intentionally omitted: this is a Windows-only project, and git's
+# case-insensitive matching on Windows made "*.app" also match our own
+# NekoChat.App/NekoStreamer.App project folders, silently excluding them.
 
 # content below from: https://github.com/github/gitignore/blob/main/Global/macOS.gitignore
 # General

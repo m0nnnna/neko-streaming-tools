@@ -1,0 +1,104 @@
+<Window x:Class="NekoChat.App.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:conv="clr-namespace:NekoChat.App.Converters"
+        mc:Ignorable="d"
+        Title="NekoChat Overlay"
+        Width="420" Height="700"
+        MinWidth="260" MinHeight="160"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="True"
+        WindowStartupLocation="Manual">
+    <Window.Resources>
+        <conv:PlatformBrushConverter x:Key="PlatformBrushConverter" />
+        <conv:PlatformTextBrushConverter x:Key="PlatformTextBrushConverter" />
+        <conv:KindToAccentBrushConverter x:Key="KindToAccentBrushConverter" />
+        <conv:KindToIconConverter x:Key="KindToIconConverter" />
+        <conv:KindToSeparatorConverter x:Key="KindToSeparatorConverter" />
+        <DropShadowEffect x:Key="TextGlow" Color="Black" BlurRadius="4" ShadowDepth="0" Opacity="0.95" />
+
+        <Style x:Key="OverlayListBoxItem" TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Drag handle + combined viewer count + hide button -->
+        <Border Grid.Row="0" Background="#59000000" CornerRadius="6" Padding="10,6" Margin="0,0,0,6"
+                MouseLeftButtonDown="DragHandle_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" FontSize="15" FontWeight="Bold" Foreground="White" Effect="{StaticResource TextGlow}">
+                    <Run Text="👁 " />
+                    <Run Text="{Binding TotalViewerCount, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock Grid.Column="1" Text="✕" Foreground="White" FontWeight="Bold" Effect="{StaticResource TextGlow}"
+                           Cursor="Hand" MouseLeftButtonDown="HideButton_MouseLeftButtonDown" />
+            </Grid>
+        </Border>
+
+        <ListBox x:Name="FeedListBox" Grid.Row="1" ItemsSource="{Binding Messages}"
+                 Background="Transparent" BorderThickness="0"
+                 ScrollViewer.CanContentScroll="False"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ItemContainerStyle="{StaticResource OverlayListBoxItem}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{Binding Kind, Converter={StaticResource KindToAccentBrushConverter}}"
+                            CornerRadius="4" Padding="6,3" Margin="0,2">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{Binding Platform, Converter={StaticResource PlatformBrushConverter}}"
+                                    CornerRadius="3" Padding="5,1" VerticalAlignment="Top" Margin="0,1,6,0">
+                                <TextBlock Text="{Binding Platform}"
+                                           Foreground="{Binding Platform, Converter={StaticResource PlatformTextBrushConverter}}"
+                                           FontSize="10" FontWeight="Bold" />
+                            </Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="White" FontSize="14" Effect="{StaticResource TextGlow}">
+                                <Run Text="{Binding Kind, Converter={StaticResource KindToIconConverter}, Mode=OneWay}" />
+                                <Run Text="{Binding AuthorName, Mode=OneWay}" FontWeight="Bold" />
+                                <Run Text="{Binding Kind, Converter={StaticResource KindToSeparatorConverter}, Mode=OneWay}" />
+                                <Run Text="{Binding Body, Mode=OneWay}" />
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Resize grip -->
+        <Rectangle x:Name="ResizeGrip" Grid.Row="1" Width="16" Height="16"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Fill="Transparent" Cursor="SizeNWSE"
+                   MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"
+                   MouseLeftButtonUp="ResizeGrip_MouseLeftButtonUp"
+                   MouseMove="ResizeGrip_MouseMove" />
+    </Grid>
+</Window>

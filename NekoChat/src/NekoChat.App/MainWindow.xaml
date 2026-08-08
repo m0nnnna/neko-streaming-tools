@@ -1,0 +1,197 @@
+<Window x:Class="NekoChat.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:NekoChat.App.ViewModels"
+        xmlns:conv="clr-namespace:NekoChat.App.Converters"
+        mc:Ignorable="d"
+        Title="NekoChat" Height="760" Width="640"
+        Background="{StaticResource BgBrush}">
+    <Window.Resources>
+        <conv:PlatformBrushConverter x:Key="PlatformBrushConverter" />
+        <conv:PlatformTextBrushConverter x:Key="PlatformTextBrushConverter" />
+        <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+    <Grid Margin="12" Background="{StaticResource BgBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TabControl Grid.Row="0">
+            <!-- Chat sources -->
+            <TabItem Header="Chat Sources">
+                <StackPanel>
+                    <GroupBox Header="Twitch" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4">
+                                <TextBlock Text="Client ID:" VerticalAlignment="Center" Width="70" />
+                                <TextBox Text="{Binding TwitchClientId, UpdateSourceTrigger=PropertyChanged}" Width="220"
+                                          IsEnabled="{Binding TwitchIsConnected, Converter={StaticResource InverseBoolConverter}}" />
+                                <Button Content="Connect" Command="{Binding ConnectTwitchCommand}" Width="70" Margin="6,0,0,0" />
+                                <Button Content="Cancel" Command="{Binding CancelTwitchAuthCommand}" Width="60" Margin="4,0,0,0"
+                                        Visibility="{Binding TwitchIsAuthenticating, Converter={StaticResource BoolToVis}}" />
+                                <Button Content="Disconnect" Command="{Binding DisconnectTwitchCommand}" Width="80" Margin="4,0,0,0"
+                                        Visibility="{Binding TwitchIsConnected, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding TwitchStatusText}" Foreground="Gray" FontSize="11" Margin="76,0,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="76,4,0,0"
+                                        Visibility="{Binding TwitchIsAuthenticating, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding TwitchUserCode}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+                                <Button Content="Open verification page" Command="{Binding OpenTwitchVerificationUrlCommand}" Margin="10,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Kick" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" Margin="0,4">
+                            <TextBlock Text="Channel:" VerticalAlignment="Center" Width="70" />
+                            <TextBox Text="{Binding KickChannelSlug, UpdateSourceTrigger=LostFocus}" Width="220" />
+                            <TextBlock Text="(no login needed — just the channel name, e.g. xqc)"
+                                       Foreground="Gray" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="YouTube" Margin="0,0,0,4">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4">
+                                <TextBlock Text="Client ID:" VerticalAlignment="Center" Width="70" />
+                                <TextBox Text="{Binding YouTubeClientId, UpdateSourceTrigger=PropertyChanged}" Width="220"
+                                          IsEnabled="{Binding YouTubeIsConnected, Converter={StaticResource InverseBoolConverter}}" />
+                                <Button Content="Connect" Command="{Binding ConnectYouTubeCommand}" Width="70" Margin="6,0,0,0" />
+                                <Button Content="Disconnect" Command="{Binding DisconnectYouTubeCommand}" Width="80" Margin="4,0,0,0"
+                                        Visibility="{Binding YouTubeIsConnected, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4">
+                                <TextBlock Text="Client Secret:" VerticalAlignment="Center" Width="70" />
+                                <PasswordBox x:Name="YouTubeClientSecretBox" Width="220"
+                                             IsEnabled="{Binding YouTubeIsConnected, Converter={StaticResource InverseBoolConverter}}"
+                                             PasswordChanged="YouTubeClientSecretBox_PasswordChanged" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding YouTubeStatusText}" Foreground="Gray" FontSize="11" Margin="76,0,0,0" />
+                            <TextBlock Text="Connect opens your browser for Google sign-in; you must be live-streaming for messages to appear."
+                                       Foreground="Gray" FontSize="11" Margin="76,2,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Donation sources (all optional — no OAuth, just paste and go) -->
+            <TabItem Header="Donations">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="StreamElements:" VerticalAlignment="Center" Width="130" />
+                        <PasswordBox x:Name="StreamElementsTokenBox" Width="220" PasswordChanged="StreamElementsTokenBox_PasswordChanged" />
+                        <TextBlock Text="JWT token from your dashboard" Foreground="Gray" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Liberapay:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding LiberapayUsername, UpdateSourceTrigger=LostFocus}" Width="220" />
+                        <TextBlock Text="username only" Foreground="Gray" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Bitcoin address:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding BitcoinAddress, UpdateSourceTrigger=LostFocus}" Width="220" />
+                        <TextBlock Text="amount only, no name" Foreground="Gray" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Ethereum address:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding EthereumAddress, UpdateSourceTrigger=LostFocus}" Width="220" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Etherscan key:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding EtherscanApiKey, UpdateSourceTrigger=LostFocus}" Width="220" />
+                        <TextBlock Text="free key, required for ETH" Foreground="Gray" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Alert Box: GIF/image + sound popups for follows/subs/raids/donations/etc -->
+            <TabItem Header="Alert Box">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default image/GIF:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding DefaultAlertImagePath, UpdateSourceTrigger=PropertyChanged}" Width="220" />
+                        <Button Content="Browse..." Command="{Binding BrowseDefaultAlertImageCommand}" Width="70" Margin="6,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Default sound:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding DefaultAlertSoundPath, UpdateSourceTrigger=PropertyChanged}" Width="220" />
+                        <Button Content="Browse..." Command="{Binding BrowseDefaultAlertSoundCommand}" Width="70" Margin="6,0,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <TextBlock Text="Display seconds:" VerticalAlignment="Center" Width="130" />
+                        <TextBox Text="{Binding DefaultAlertDisplaySeconds, UpdateSourceTrigger=PropertyChanged}" Width="60" />
+                    </StackPanel>
+
+                    <Expander Header="Per-alert overrides (optional — blank means use the default above)" Margin="0,8,0,0">
+                        <ItemsControl ItemsSource="{Binding AlertOverrides}" Margin="0,6,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="11" />
+                                        <TextBox Grid.Column="1" Text="{Binding ImagePath, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,4,0" FontSize="10" />
+                                        <Button Grid.Column="2" Content="..." Width="26"
+                                                Command="{Binding DataContext.BrowseOverrideImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+                                        <TextBox Grid.Column="3" Text="{Binding SoundPath, UpdateSourceTrigger=PropertyChanged}" Margin="4,0,4,0" FontSize="10" />
+                                        <Button Grid.Column="4" Content="..." Width="26"
+                                                Command="{Binding DataContext.BrowseOverrideSoundCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Expander>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- Persistent controls, always visible regardless of which tab is open -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10">
+            <Button Content="Connect Feed" Command="{Binding ConnectCommand}" Margin="0,0,6,0" />
+            <Button Content="Disconnect Feed" Command="{Binding DisconnectCommand}" Margin="0,0,6,0" />
+            <Button x:Name="ToggleOverlayButton" Content="Show Overlay" Click="ToggleOverlayButton_Click" Margin="0,0,6,0" />
+            <Button x:Name="ToggleAlertBoxButton" Content="Show Alert Box" Click="ToggleAlertBoxButton_Click" Margin="0,0,6,0" />
+            <Button Content="Test Alert" Command="{Binding TestAlertCommand}" Margin="0,0,10,0" />
+            <TextBlock Text="{Binding TotalViewerCount, StringFormat='👁 {0}'}"
+                       Foreground="Gray" FontSize="12" VerticalAlignment="Center"
+                       Visibility="{Binding IsConnected, Converter={StaticResource BoolToVis}}" />
+        </StackPanel>
+
+        <ListBox Grid.Row="2" ItemsSource="{Binding Messages}" ScrollViewer.CanContentScroll="False"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="{StaticResource SurfaceBrush}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{Binding Platform, Converter={StaticResource PlatformBrushConverter}}"
+                                CornerRadius="3" Padding="5,1" VerticalAlignment="Top" Margin="0,1,6,0">
+                            <TextBlock Text="{Binding Platform}"
+                                       Foreground="{Binding Platform, Converter={StaticResource PlatformTextBrushConverter}}"
+                                       FontSize="10" FontWeight="Bold" />
+                        </Border>
+                        <TextBlock Grid.Column="1" TextWrapping="Wrap">
+                            <Run Text="{Binding AuthorName, Mode=OneWay}" FontWeight="Bold" />
+                            <Run Text=": " />
+                            <Run Text="{Binding Body, Mode=OneWay}" />
+                        </TextBlock>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>
