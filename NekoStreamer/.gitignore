@@ -3,8 +3,9 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
-# NekoStreamer: vendored binaries and runtime data
-/tools/mediamtx/
+# NekoStreamer: runtime data (mediamtx.exe IS committed — see tools/mediamtx/ —
+# because excluding it makes a fresh clone fail to build: the app's .csproj
+# copies it as a Content item and MSBuild hard-errors when the source is missing)
 /data/segments/
 *.log
 
