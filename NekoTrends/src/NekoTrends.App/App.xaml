@@ -1,0 +1,12 @@
+<Application x:Class="NekoTrends.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        No StartupUri on purpose: headless collect mode must never create a window, and
+        StartupUri would build one before OnStartup could decide. MainWindow is shown
+        explicitly in App.xaml.cs instead.
+    -->
+    <Application.Resources>
+        <ResourceDictionary Source="Theme.xaml" />
+    </Application.Resources>
+</Application>

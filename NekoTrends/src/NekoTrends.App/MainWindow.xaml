@@ -1,0 +1,531 @@
+<Window x:Class="NekoTrends.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:NekoTrends.App.Converters"
+        Title="NekoTrends — VTuber trends across Twitch, YouTube and Kick"
+        Height="860" Width="1200" MinHeight="560" MinWidth="860">
+
+    <Window.Resources>
+        <conv:PlatformBrushConverter x:Key="PlatformBrush" />
+        <conv:MomentumBrushConverter x:Key="MomentumBrush" />
+        <conv:ViewerCountConverter x:Key="Viewers" />
+        <conv:UptimeConverter x:Key="Uptime" />
+        <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisible" />
+        <conv:CountToVisibilityConverter x:Key="EmptyState" Invert="True" />
+        <conv:CountToVisibilityConverter x:Key="NonEmpty" />
+        <conv:PlatformNameConverter x:Key="PlatformName" />
+        <conv:AlertTriggerConverter x:Key="TriggerName" />
+        <conv:JoinConverter x:Key="Join" />
+
+        <!-- One card in the feed. Clicking anywhere on it opens the stream. -->
+        <DataTemplate x:Key="StreamCard">
+            <Button Command="{Binding DataContext.OpenStreamCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding}"
+                    HorizontalContentAlignment="Stretch" Margin="0,0,0,8" Padding="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="card" Background="{StaticResource SurfaceBrush}"
+                                BorderBrush="{StaticResource BorderBrush2}" BorderThickness="1" CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Background="{Binding Platform, Converter={StaticResource PlatformBrush}}"
+                                        CornerRadius="8,0,0,8" />
+
+                                <Border Grid.Column="1" Width="150" Height="84" Margin="10,10,0,10"
+                                        CornerRadius="6" ClipToBounds="True" Background="{StaticResource BgBrush}">
+                                    <Image Source="{Binding ThumbnailUrl}" Stretch="UniformToFill"
+                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                </Border>
+
+                                <StackPanel Grid.Column="2" Margin="14,12,10,12" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="★" Foreground="{StaticResource NewcomerBrush}" FontSize="13"
+                                                   VerticalAlignment="Center" Margin="0,0,5,0"
+                                                   ToolTip="On your watchlist"
+                                                   Visibility="{Binding IsTracked, Converter={StaticResource BoolToVisible}}" />
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="15"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <Border Margin="8,0,0,0" Padding="6,1" CornerRadius="4"
+                                                Background="{Binding IsNewcomer, Converter={StaticResource MomentumBrush}}"
+                                                Visibility="{Binding HasMomentum, Converter={StaticResource BoolToVisible}}">
+                                            <TextBlock Text="{Binding Headline}" FontSize="11" FontWeight="Bold"
+                                                       Foreground="#FF10130F" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextMutedBrush}"
+                                               FontSize="12" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"
+                                               Visibility="{Binding Title, Converter={StaticResource NullToCollapsed}}" />
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                        <TextBlock Text="{Binding Category}" FontSize="11"
+                                                   Foreground="{StaticResource AccentPurpleBrush}"
+                                                   Visibility="{Binding Category, Converter={StaticResource NullToCollapsed}}" />
+                                        <TextBlock Text="{Binding BaselineNote}" FontSize="11" Margin="10,0,0,0"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   Visibility="{Binding BaselineNote, Converter={StaticResource NullToCollapsed}}" />
+                                        <Border Margin="10,0,0,0" Padding="5,1" CornerRadius="3"
+                                                Background="{StaticResource SelectionBrush}"
+                                                Visibility="{Binding RuleLabel, Converter={StaticResource NullToCollapsed}}">
+                                            <TextBlock Text="{Binding RuleLabel}" FontSize="10"
+                                                       Foreground="{StaticResource AccentPinkBrush}" />
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="3" Margin="10,12,16,12" VerticalAlignment="Center"
+                                            HorizontalAlignment="Right">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Ellipse Width="7" Height="7" Fill="{StaticResource LiveBrush}"
+                                                 VerticalAlignment="Center" Margin="0,0,6,0" />
+                                        <TextBlock Text="{Binding ViewerCount, Converter={StaticResource Viewers}}"
+                                                   FontSize="19" FontWeight="Bold" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Uptime, Converter={StaticResource Uptime}}"
+                                               FontSize="11" HorizontalAlignment="Right" Margin="0,3,0,0"
+                                               Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="card" Property="Background" Value="{StaticResource SurfaceHoverBrush}" />
+                                <Setter TargetName="card" Property="BorderBrush" Value="{StaticResource AccentPinkBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="NekoTrends" FontSize="21" FontWeight="Bold"
+                           Foreground="{StaticResource AccentPinkBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Status}" Margin="14,0,0,0" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ComboBox SelectedIndex="{Binding PlatformFilterIndex}" Width="130" VerticalAlignment="Center">
+                    <ComboBoxItem Content="All platforms" />
+                    <ComboBoxItem Content="Twitch" />
+                    <ComboBoxItem Content="YouTube" />
+                    <ComboBoxItem Content="Kick" />
+                </ComboBox>
+                <ComboBox ItemsSource="{Binding RuleFilterOptions}" SelectedIndex="{Binding RuleFilterIndex}"
+                          Width="130" Margin="8,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding LastUpdated, StringFormat='updated {0}'}" Margin="14,0,10,0"
+                           VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" FontSize="11" />
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" MinWidth="86" />
+            </StackPanel>
+        </Grid>
+
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding PlatformErrors}" Margin="0,0,0,8">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="#33FF4757" BorderBrush="{StaticResource LiveBrush}" BorderThickness="1"
+                            CornerRadius="5" Padding="10,6" Margin="0,0,0,4">
+                        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TabControl Grid.Row="2">
+            <!-- ==================== TRENDING ==================== -->
+            <TabItem Header="Trending">
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding Trending.Count, Converter={StaticResource NonEmpty}}">
+                        <ItemsControl ItemsSource="{Binding Trending}" ItemTemplate="{StaticResource StreamCard}" />
+                    </ScrollViewer>
+
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460"
+                                Visibility="{Binding Trending.Count, Converter={StaticResource EmptyState}}">
+                        <TextBlock Text="Nothing unusual right now" FontSize="16" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
+                        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0" FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Text="Trending compares each streamer against their own recent numbers, so it needs a few days of history before it has much to say. Turn on background collection in Sources to build that history even while NekoTrends is closed." />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ==================== TOP NOW ==================== -->
+            <TabItem Header="Top Now">
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding TopNow.Count, Converter={StaticResource NonEmpty}}">
+                        <ItemsControl ItemsSource="{Binding TopNow}" ItemTemplate="{StaticResource StreamCard}" />
+                    </ScrollViewer>
+
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Visibility="{Binding TopNow.Count, Converter={StaticResource EmptyState}}"
+                               Text="No live VTubers found. Try Refresh, or add sources on the Sources tab." />
+                </Grid>
+            </TabItem>
+
+            <!-- ==================== WATCHLIST ==================== -->
+            <TabItem Header="Watchlist">
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding Watchlist.Count, Converter={StaticResource NonEmpty}}">
+                        <ItemsControl ItemsSource="{Binding Watchlist}" ItemTemplate="{StaticResource StreamCard}" />
+                    </ScrollViewer>
+
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="440"
+                                Visibility="{Binding Watchlist.Count, Converter={StaticResource EmptyState}}">
+                        <TextBlock Text="None of your tracked channels are live" FontSize="15" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
+                        <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,8,0,0" FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Text="Add channels on the Trackers tab. Tracked channels are polled directly, so they show up even when they're too small for platform discovery to find." />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ==================== ALERTS ==================== -->
+            <TabItem Header="Alerts">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <CheckBox IsChecked="{Binding ShowAlertPopups}" Content="Show a popup when an alert fires"
+                                  Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                        <Button Content="Clear" Command="{Binding ClearAlertsCommand}" Margin="14,0,0,0" MinWidth="70" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding Alerts.Count, Converter={StaticResource NonEmpty}}">
+                        <ItemsControl ItemsSource="{Binding Alerts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.OpenAlertCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}" HorizontalContentAlignment="Stretch"
+                                            Margin="0,0,0,5" Padding="0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="row" Background="{StaticResource SurfaceBrush}"
+                                                        BorderBrush="{StaticResource BorderBrush2}" BorderThickness="1"
+                                                        CornerRadius="6" Padding="12,8">
+                                                    <Grid>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Border Width="3" Background="{Binding Platform, Converter={StaticResource PlatformBrush}}"
+                                                                    CornerRadius="2" Margin="0,0,10,0" />
+                                                            <StackPanel>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding ChannelName}" FontWeight="Bold" />
+                                                                    <TextBlock Text="{Binding Message}" Margin="7,0,0,0"
+                                                                               Foreground="{StaticResource SurgeBrush}" />
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding RuleName}" FontSize="11"
+                                                                           Foreground="{StaticResource TextMutedBrush}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding LocalTime}" HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" FontSize="11"
+                                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="row" Property="BorderBrush" Value="{StaticResource AccentPinkBrush}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" MaxWidth="420"
+                               TextAlignment="Center"
+                               Visibility="{Binding Alerts.Count, Converter={StaticResource EmptyState}}"
+                               Text="No alerts yet. Create alert rules on the Trackers tab — they fire on transitions, so you get told once when something happens rather than every refresh." />
+                </Grid>
+            </TabItem>
+
+            <!-- ==================== TRACKERS ==================== -->
+            <TabItem Header="Trackers">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <GroupBox Header="Tracked channels" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Channels here are polled directly on every refresh, whatever their size. This is the only way to follow a VTuber below Twitch's top ~1,000 discovery scan, and the only way NekoTrends sees Kick at all." />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <ComboBox SelectedIndex="{Binding NewChannelPlatformIndex}" Width="110" VerticalAlignment="Center">
+                                        <ComboBoxItem Content="Twitch" />
+                                        <ComboBoxItem Content="YouTube" />
+                                        <ComboBoxItem Content="Kick" />
+                                    </ComboBox>
+                                    <TextBox Text="{Binding NewChannelId, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="280" Margin="8,0,0,0" />
+                                    <Button Content="Track" Command="{Binding AddTrackedChannelCommand}"
+                                            Margin="8,0,0,0" MinWidth="80" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding TrackerHint}" FontSize="11" Margin="0,6,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding TrackerStatus}" FontSize="12" Margin="0,4,0,0"
+                                           TextWrapping="Wrap" Foreground="{StaticResource AccentPinkBrush}" />
+
+                                <ItemsControl ItemsSource="{Binding TrackedChannels}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="5"
+                                                    Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Width="3" CornerRadius="2" Margin="0,0,10,0"
+                                                                Background="{Binding Platform, Converter={StaticResource PlatformBrush}}" />
+                                                        <TextBlock Text="{Binding Platform, Converter={StaticResource PlatformName}}"
+                                                                   Width="70" FontSize="11" VerticalAlignment="Center"
+                                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Id}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <Button Content="Remove" HorizontalAlignment="Right" Padding="8,2"
+                                                            Command="{Binding DataContext.RemoveTrackedChannelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="Nothing tracked yet." FontSize="12" Margin="0,4,0,0"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           Visibility="{Binding TrackedChannels.Count, Converter={StaticResource EmptyState}}" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Keyword rules" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Follow a group without naming every channel — an agency, a game, a language. Rules label matching streams and let you filter the feed by them. Terms are comma-separated and match the title, category, tags and channel name." />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBox Text="{Binding NewRuleName, UpdateSourceTrigger=PropertyChanged}" Width="150"
+                                             ToolTip="Rule name, e.g. Hololive" />
+                                    <TextBox Text="{Binding NewRuleTerms, UpdateSourceTrigger=PropertyChanged}" Width="280"
+                                             Margin="8,0,0,0" ToolTip="Comma-separated terms, e.g. hololive, hololiveEN" />
+                                    <Button Content="Add rule" Command="{Binding AddKeywordRuleCommand}"
+                                            Margin="8,0,0,0" MinWidth="80" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding KeywordRules}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="5"
+                                                    Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                                        <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                                                   Text="{Binding Terms, Converter={StaticResource Join}}" />
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <CheckBox IsChecked="{Binding SearchYouTube}" Content="Search YouTube"
+                                                                  VerticalAlignment="Center" Margin="0,0,10,0"
+                                                                  Foreground="{StaticResource TextMutedBrush}"
+                                                                  ToolTip="Costs 100 YouTube quota units per term, per rotation." />
+                                                        <Button Content="Remove" Padding="8,2"
+                                                                Command="{Binding DataContext.RemoveKeywordRuleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Alert rules">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Alerts fire on transitions, not on every refresh — you're told once when a channel goes live, crosses a viewer count, or starts spiking. They apply to tracked channels only, since an unscoped 'went live' rule across all of discovery would be pure noise." />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBox Text="{Binding NewAlertName, UpdateSourceTrigger=PropertyChanged}" Width="150"
+                                             ToolTip="Alert name" />
+                                    <ComboBox SelectedIndex="{Binding NewAlertTriggerIndex}" Width="150" Margin="8,0,0,0">
+                                        <ComboBoxItem Content="Went live" />
+                                        <ComboBoxItem Content="Viewer threshold" />
+                                        <ComboBoxItem Content="Momentum spike" />
+                                    </ComboBox>
+                                    <TextBox Text="{Binding NewAlertThreshold, UpdateSourceTrigger=PropertyChanged}" Width="70"
+                                             Margin="8,0,0,0" ToolTip="Viewer count, or a multiple for a spike" />
+                                    <Button Content="Add alert" Command="{Binding AddAlertRuleCommand}"
+                                            Margin="8,0,0,0" MinWidth="80" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding AlertRules}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="5"
+                                                    Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <CheckBox IsChecked="{Binding Enabled}" VerticalAlignment="Center"
+                                                                  Margin="0,0,10,0" />
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                                            <TextBlock FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                                                       Text="{Binding Trigger, Converter={StaticResource TriggerName}}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <Button Content="Remove" HorizontalAlignment="Right" Padding="8,2"
+                                                            Command="{Binding DataContext.RemoveAlertRuleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ==================== SOURCES ==================== -->
+            <TabItem Header="Sources">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <GroupBox Header="Twitch" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Twitch has a real VTuber tag, so discovery here is automatic. You just need your own Client ID — register a free app at dev.twitch.tv/console (same process as NekoChat; no client secret needed)." />
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBlock Text="Client ID" VerticalAlignment="Center" Width="80" />
+                                    <TextBox Text="{Binding TwitchClientId, UpdateSourceTrigger=PropertyChanged}" Width="330" />
+                                    <Button Content="Connect" Command="{Binding ConnectTwitchCommand}"
+                                            Margin="10,0,0,0" MinWidth="90" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding TwitchStatus}" Margin="80,8,0,0" FontSize="12"
+                                           TextWrapping="Wrap" Foreground="{StaticResource AccentPinkBrush}" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="YouTube (optional)" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Optional — Twitch and Kick work without it. Needs a Google API key with YouTube Data API v3 enabled (an API key only, not the full OAuth setup NekoChat needs). Tracked YouTube channels are read from free public RSS, so a watchlist barely touches the quota; only global discovery is expensive." />
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBlock Text="API key" VerticalAlignment="Center" Width="80" />
+                                    <PasswordBox x:Name="YouTubeKeyBox" Width="330" PasswordChanged="OnYouTubeKeyChanged" />
+                                    <Button Content="Save" Command="{Binding SaveYouTubeKeyCommand}"
+                                            Margin="10,0,0,0" MinWidth="90" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding YouTubeStatus}" Margin="80,8,0,0" FontSize="12"
+                                           TextWrapping="Wrap" Foreground="{StaticResource AccentPinkBrush}" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Find VTubers on Kick" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Kick has no VTuber tag or category, and its live-browse API returns empty tags for every stream — so there is nothing to filter on automatically. Scan searches Kick for VTuber-sounding channels and proposes them; you decide what actually belongs. Accepted channels go to your watchlist." />
+
+                                <Button Content="Scan for VTubers" Command="{Binding ScanKickCommand}"
+                                        Margin="0,10,0,0" MinWidth="140" HorizontalAlignment="Left" />
+                                <TextBlock Text="{Binding KickStatus}" Margin="0,8,0,0" FontSize="12"
+                                           TextWrapping="Wrap" Foreground="{StaticResource AccentPinkBrush}" />
+
+                                <ItemsControl ItemsSource="{Binding KickSuggestions}" Margin="0,10,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource SurfaceHoverBrush}" CornerRadius="5"
+                                                    Padding="10,6" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+                                                        <TextBlock Text="{Binding FollowerNote}" FontSize="11"
+                                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button Content="Add"
+                                                                Command="{Binding DataContext.AcceptCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" MinWidth="66" />
+                                                        <Button Content="Dismiss"
+                                                                Command="{Binding DataContext.DismissCandidateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}" Margin="6,0,0,0" MinWidth="66" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="Feed settings">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Refresh every" VerticalAlignment="Center" Width="120" />
+                                    <TextBox Text="{Binding RefreshMinutes, UpdateSourceTrigger=LostFocus}" Width="60" />
+                                    <TextBlock Text="minutes" VerticalAlignment="Center" Margin="8,0,0,0"
+                                               Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding EffectiveRefreshNote}" Margin="120,0,0,10" FontSize="11"
+                                           TextWrapping="Wrap" Foreground="{StaticResource TextMutedBrush}" />
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <TextBlock Text="Min viewers" VerticalAlignment="Center" Width="120" />
+                                    <TextBox Text="{Binding MinViewers, UpdateSourceTrigger=LostFocus}" Width="60" />
+                                    <TextBlock Text="to appear in Trending" VerticalAlignment="Center" Margin="8,0,0,0"
+                                               Foreground="{StaticResource TextMutedBrush}" />
+                                </StackPanel>
+
+                                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="Momentum compares each channel against its own recent baseline, so gaps in sampling make it noisier. Background collection keeps taking samples on the same interval while NekoTrends is closed, via a Windows scheduled task that runs only while you're logged in." />
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <Button Content="{Binding BackgroundCollectionLabel}"
+                                            Command="{Binding ToggleBackgroundCollectionCommand}" MinWidth="190" />
+                                    <TextBlock Text="{Binding BackgroundStatus}" VerticalAlignment="Center" Margin="12,0,0,0"
+                                               FontSize="12" TextWrapping="Wrap"
+                                               Foreground="{StaticResource AccentPinkBrush}" />
+                                </StackPanel>
+
+                                <TextBlock Margin="0,12,0,0" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                                           Text="{Binding HistorySize, StringFormat='Stored history: {0}'}" />
+                            </StackPanel>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock Grid.Row="3" Margin="2,8,0,0" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                   Text="Viewer history is stored locally only. Nothing is uploaded anywhere." />
+    </Grid>
+</Window>
