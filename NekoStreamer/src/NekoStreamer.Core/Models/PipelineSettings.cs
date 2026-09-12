@@ -6,6 +6,12 @@ public sealed class PipelineSettings
 
     public required string BufferDirectory { get; init; }
 
+    public required string ClipsDirectory { get; init; }
+
+    public bool RecordSession { get; init; }
+
+    public required string RecordingsDirectory { get; init; }
+
     public TimeSpan SegmentDuration { get; init; } = TimeSpan.FromSeconds(2);
 
     public TimeSpan RetentionMargin { get; init; } = TimeSpan.FromSeconds(30);

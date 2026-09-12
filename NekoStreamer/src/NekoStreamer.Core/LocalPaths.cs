@@ -16,4 +16,16 @@ public static class LocalPaths
     public static string BufferDirectory => Path.Combine(DataDirectory, "buffer");
 
     public static string SettingsFilePath => Path.Combine(DataDirectory, "settings.json");
+
+    public static string RemoteSettingsFilePath => Path.Combine(DataDirectory, "remote.json");
+
+    /// <summary>Under Videos, not DataDirectory — clips are user-facing output, not runtime state.</summary>
+    public static string ClipsDirectory { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
+        "NekoStreamer Clips");
+
+    /// <summary>Under Videos, not DataDirectory — same reasoning as ClipsDirectory.</summary>
+    public static string RecordingsDirectory { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
+        "NekoStreamer Recordings");
 }

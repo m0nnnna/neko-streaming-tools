@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:NekoStreamer.App.ViewModels"
         xmlns:conv="clr-namespace:NekoStreamer.App.Converters"
         mc:Ignorable="d"
-        Title="NekoStreamer" Height="600" Width="820"
+        Title="NekoStreamer" Height="650" Width="900"
         Background="{StaticResource BgBrush}">
     <Window.DataContext>
         <vm:MainViewModel />
@@ -16,6 +16,8 @@
     </Window.Resources>
     <Grid Margin="12" Background="{StaticResource BgBrush}">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -38,13 +40,59 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Delay (seconds):" VerticalAlignment="Center" />
             <TextBox Text="{Binding DelaySeconds, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="6,0,20,0" VerticalAlignment="Center" IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolConverter}}" />
+            <CheckBox Content="Record full session" IsChecked="{Binding RecordSession}" VerticalAlignment="Center" Margin="0,0,20,0"
+                      IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolConverter}}" />
             <Button Content="Start" Command="{Binding StartCommand}" Width="80" Margin="0,0,6,0" />
             <Button Content="Stop" Command="{Binding StopCommand}" Width="80" Margin="0,0,20,0" />
-            <TextBlock Text="{Binding StatusText}" FontWeight="Bold" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding StatusText}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0" />
+            <TextBlock Text="{Binding HealthText}" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,20,0" />
+            <Button Content="{Binding PanicMuteButtonLabel}" Command="{Binding PanicMuteCommand}" Width="140" />
         </StackPanel>
 
+        <!-- Instant clip -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Clip length:" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{x:Static vm:MainViewModel.ClipLengthOptions}"
+                      SelectedItem="{Binding ClipSeconds}" Width="70" Margin="6,0,20,0" VerticalAlignment="Center">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding StringFormat={}{0}s}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Content="{Binding SaveClipButtonLabel}" Command="{Binding SaveClipCommand}" Width="190" Margin="0,0,10,0" />
+            <Button Content="{Binding HotkeyButtonLabel}" Command="{Binding SetHotkeyCommand}" Width="190" />
+        </StackPanel>
+
+        <!-- Clips -->
+        <GroupBox Grid.Row="3" Header="Clips" Margin="0,0,0,10">
+            <DockPanel>
+                <Button DockPanel.Dock="Top" Content="Open Clips Folder" Command="{Binding OpenClipsFolderCommand}"
+                        Width="140" HorizontalAlignment="Left" Margin="0,0,0,6" />
+                <ScrollViewer MaxHeight="90" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Clips}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                    <TextBlock Text="{Binding SavedAtDisplay}" Width="130" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding FileName}" Width="260" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding SizeDisplay}" Width="60" Foreground="Gray" VerticalAlignment="Center" />
+                                    <Button Content="Play" Width="50" Margin="6,0,0,0"
+                                            Command="{Binding DataContext.PlayClipCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Delete" Width="55" Margin="4,0,0,0"
+                                            Command="{Binding DataContext.DeleteClipCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </GroupBox>
+
         <!-- Destinations -->
-        <GroupBox Grid.Row="2" Header="Destinations" Margin="0,0,0,10">
+        <GroupBox Grid.Row="4" Header="Destinations" Margin="0,0,0,10">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
                     <Button Content="Add Destination" Command="{Binding AddDestinationCommand}" Width="130" />
@@ -85,8 +133,8 @@
             </DockPanel>
         </GroupBox>
 
-        <TextBlock Grid.Row="3" Text="Log" FontWeight="Bold" Margin="0,0,0,4" />
-        <ListBox Grid.Row="4" ItemsSource="{Binding LogLines}" FontFamily="Consolas" FontSize="11"
+        <TextBlock Grid.Row="5" Text="Log" FontWeight="Bold" Margin="0,0,0,4" />
+        <ListBox Grid.Row="6" ItemsSource="{Binding LogLines}" FontFamily="Consolas" FontSize="11"
                  Background="{StaticResource SurfaceBrush}" />
     </Grid>
 </Window>

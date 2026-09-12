@@ -6,6 +6,16 @@ public sealed class AppSettings
 {
     public int DelaySeconds { get; set; } = 30;
 
+    public int ClipSeconds { get; set; } = 30;
+
+    /// <summary>Raw WPF ModifierKeys flags — Alt=1, Control=2, Shift=4, Windows=8. Default is Control|Alt.</summary>
+    public int ClipHotkeyModifiers { get; set; } = 3;
+
+    /// <summary>WPF Key enum name, e.g. "C".</summary>
+    public string ClipHotkeyKey { get; set; } = "C";
+
+    public bool RecordSession { get; set; }
+
     public List<StoredDestination> Destinations { get; set; } = new();
 }
 

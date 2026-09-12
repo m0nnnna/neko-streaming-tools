@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NekoStreamer Remote</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#15121c">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>NekoStreamer Remote</h1>
+  <div class="status">
+    <span class="dot" id="obsDot"></span>OBS
+    <span class="dot" id="vtsDot"></span>VTS
+    <button id="refreshBtn" aria-label="Refresh">&#8635;</button>
+    <button id="tokenGear" aria-label="Settings">&#9881;</button>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Scenes</h2>
+    <div id="scenes" class="grid"><p class="hint">Loading…</p></div>
+  </section>
+  <section>
+    <h2>Emotions / Hotkeys</h2>
+    <div id="hotkeys" class="grid"><p class="hint">Loading…</p></div>
+  </section>
+</main>
+
+<div id="tokenModal" class="modal" hidden>
+  <div class="modal-box">
+    <h3>Pairing token</h3>
+    <p class="hint">Scan the QR code shown in the NekoStreamer Remote console window on your PC — it fills this in automatically. Only type it manually if you can't scan.</p>
+    <input id="tokenInput" type="text" placeholder="paste token" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="tokenSave">Connect</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

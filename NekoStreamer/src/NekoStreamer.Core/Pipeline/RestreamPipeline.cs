@@ -26,6 +26,8 @@ public sealed class RestreamPipeline : IAsyncDisposable
     private IReadOnlyList<DestinationTarget>? _destinations;
     private RingBufferSegmentWriter? _writer;
     private DelayedMultistreamPusher? _pusher;
+    private ClipRecorder? _clipRecorder;
+    private SessionRecorder? _sessionRecorder;
     private CancellationTokenSource? _watchCts;
     private Task? _watchTask;
     private bool _stopRequested;
@@ -35,6 +37,12 @@ public sealed class RestreamPipeline : IAsyncDisposable
     public event Action<PipelineState>? StateChanged;
     public event Action<string>? LogReceived;
     public event Action<Exception>? Faulted;
+
+    /// <summary>Fires once per genuine OBS disconnect (not the initial connect-wait) — the writer's ffmpeg process exited on its own.</summary>
+    public event Action? SourceLost;
+
+    /// <summary>Fires roughly once a second while live with the current bitrate/elapsed/speed/dropped-frame counts.</summary>
+    public event Action<StreamStats>? StatsUpdated;
 
     public RestreamPipeline(MediaMtxServer mediaMtx, string ffmpegPath, PipelineSettings settings)
     {
@@ -89,6 +97,7 @@ public sealed class RestreamPipeline : IAsyncDisposable
     {
         _pusher = new DelayedMultistreamPusher(_ffmpegPath, _settings.Delay, destinations);
         _pusher.OutputLogReceived += line => LogReceived?.Invoke($"[out] {line}");
+        _pusher.StatsUpdated += stats => StatsUpdated?.Invoke(stats);
         _pusher.Faulted += ex =>
         {
             SetState(PipelineState.Faulted);
@@ -96,12 +105,39 @@ public sealed class RestreamPipeline : IAsyncDisposable
         };
         _pusher.Start();
 
+        _clipRecorder = new ClipRecorder(_ffmpegPath, _settings.ClipsDirectory, _settings.Retention);
+
+        if (_settings.RecordSession)
+        {
+            var recordingPath = Path.Combine(_settings.RecordingsDirectory, $"vod_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.ts");
+            _sessionRecorder = new SessionRecorder(recordingPath);
+            _sessionRecorder.Start();
+            LogReceived?.Invoke($"Recording session to: {recordingPath}");
+        }
+
         _writer = new RingBufferSegmentWriter(_ffmpegPath, IngestUrl, _settings);
-        _writer.SegmentCompleted += segment => _pusher.Enqueue(segment);
+        _writer.SegmentCompleted += segment =>
+        {
+            _pusher.Enqueue(segment);
+            _clipRecorder.Track(segment);
+            _sessionRecorder?.Append(segment);
+        };
         _writer.OutputLogReceived += line => LogReceived?.Invoke($"[in] {line}");
         _writer.SourceLost += OnSourceLost;
         _writer.Start();
     }
+
+    /// <summary>Remuxes the trailing <paramref name="duration"/> of buffered video into a clip file.</summary>
+    public Task<string> SaveClipAsync(TimeSpan duration) =>
+        _clipRecorder?.SaveClipAsync(duration)
+        ?? throw new InvalidOperationException("Not currently live.");
+
+    public bool IsMuted => _pusher?.IsMuted ?? false;
+
+    /// <summary>Restarts the output leg with (or without) audio mapped — see DelayedMultistreamPusher for why this can't be a live toggle.</summary>
+    public Task SetMutedAsync(bool muted) =>
+        _pusher?.SetMutedAsync(muted)
+        ?? throw new InvalidOperationException("Not currently live.");
 
     /// <summary>
     /// Fires from the writer's ffmpeg process exiting on its own — OBS stopped
@@ -123,6 +159,7 @@ public sealed class RestreamPipeline : IAsyncDisposable
                 return;
 
             LogReceived?.Invoke("OBS stream ended — waiting for it to reconnect...");
+            SourceLost?.Invoke();
 
             if (_pusher is not null)
             {
@@ -133,6 +170,9 @@ public sealed class RestreamPipeline : IAsyncDisposable
 
             _writer?.Dispose();
             _writer = null;
+            _clipRecorder = null;
+            _sessionRecorder?.Dispose();
+            _sessionRecorder = null;
 
             if (_stopRequested)
                 return;
@@ -185,6 +225,9 @@ public sealed class RestreamPipeline : IAsyncDisposable
 
             _writer?.Dispose();
             _writer = null;
+            _clipRecorder = null;
+            _sessionRecorder?.Dispose();
+            _sessionRecorder = null;
 
             SetState(PipelineState.Stopped);
         }
