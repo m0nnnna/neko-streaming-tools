@@ -20,13 +20,26 @@
   </div>
 </header>
 
+<div id="demoBanner" class="demo-banner" hidden>Demo mode — showing sample data, not connected to OBS or VTube Studio</div>
+
+<nav class="tabs" role="tablist">
+  <button id="tab-obs" class="tab" role="tab">OBS</button>
+  <button id="tab-vts" class="tab" role="tab">VTube Studio</button>
+</nav>
+
 <main>
-  <section>
-    <h2>Scenes</h2>
+  <section id="panel-obs">
+    <div class="section-head">
+      <h2>Scenes</h2>
+      <button id="editObs" class="edit-toggle">Edit</button>
+    </div>
     <div id="scenes" class="grid"><p class="hint">Loading…</p></div>
   </section>
-  <section>
-    <h2>Emotions / Hotkeys</h2>
+  <section id="panel-vts">
+    <div class="section-head">
+      <h2>Emotions / Hotkeys</h2>
+      <button id="editVts" class="edit-toggle">Edit</button>
+    </div>
     <div id="hotkeys" class="grid"><p class="hint">Loading…</p></div>
   </section>
 </main>
